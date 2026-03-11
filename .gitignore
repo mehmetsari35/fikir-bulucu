@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+data/
+*.db
+*.sqlite
+.venv/
+venv/
+Scraper/
+komut.txt
+.claude

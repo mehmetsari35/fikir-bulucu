@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fikir Bulucu - AI Opportunity Radar</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔭</text></svg>">
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1a2332;
+            --bg-card-hover: #1f2b3d;
+            --border: #2a3548;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-best: #f59e0b;
+            --accent-best-bg: rgba(245, 158, 11, 0.08);
+            --accent-medium: #3b82f6;
+            --accent-medium-bg: rgba(59, 130, 246, 0.08);
+            --accent-small: #10b981;
+            --accent-small-bg: rgba(16, 185, 129, 0.08);
+            --accent-ai: #a855f7;
+            --accent-ai-bg: rgba(168, 85, 247, 0.08);
+            --danger: #ef4444;
+            --success: #22c55e;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            font-size: 1.75rem;
+        }
+
+        .logo-text h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .logo-text span {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .scan-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            padding: 0.4rem 0.8rem;
+            background: var(--bg-card);
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.error { background: var(--danger); }
+        .status-dot.never { background: var(--text-muted); animation: none; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--text-muted);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-scan {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border-color: #3b82f6;
+        }
+
+        .btn-scan:hover {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        }
+
+        /* Main */
+        .main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 2rem;
+        }
+
+        /* Date Nav */
+        .date-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+
+        .date-display {
+            display: flex;
+            align-items: baseline;
+            gap: 0.75rem;
+        }
+
+        .date-display h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .date-display .date-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .date-arrows {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .date-arrows button {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .date-arrows button:hover { background: var(--bg-card-hover); }
+        .date-arrows button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* Signal Stats Bar */
+        .signal-stats {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .signal-stat {
+            padding: 0.6rem 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .signal-stat .count {
+            font-weight: 700;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        /* Opportunity Cards */
+        .opportunities-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .opp-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .opp-card:hover {
+            border-color: var(--text-muted);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+
+        .opp-card.best { border-left: 4px solid var(--accent-best); }
+        .opp-card.medium { border-left: 4px solid var(--accent-medium); }
+        .opp-card.small { border-left: 4px solid var(--accent-small); }
+        .opp-card.ai_synthesized { border-left: 4px solid var(--accent-ai); }
+
+        .opp-header {
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            cursor: pointer;
+        }
+
+        .opp-header-left {
+            flex: 1;
+        }
+
+        .opp-badge {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 0.25rem 0.65rem;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 0.5rem;
+        }
+
+        .opp-card.best .opp-badge {
+            background: var(--accent-best-bg);
+            color: var(--accent-best);
+        }
+        .opp-card.medium .opp-badge {
+            background: var(--accent-medium-bg);
+            color: var(--accent-medium);
+        }
+        .opp-card.small .opp-badge {
+            background: var(--accent-small-bg);
+            color: var(--accent-small);
+        }
+        .opp-card.ai_synthesized .opp-badge {
+            background: var(--accent-ai-bg);
+            color: var(--accent-ai);
+        }
+
+        .opp-title {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+        }
+
+        .opp-explanation {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .opp-difficulty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            flex-shrink: 0;
+        }
+
+        .difficulty-dots {
+            display: flex;
+            gap: 3px;
+        }
+
+        .difficulty-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--border);
+        }
+
+        .difficulty-dot.filled { background: var(--text-secondary); }
+
+        .difficulty-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .opp-expand-icon {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+            flex-shrink: 0;
+            margin-top: 0.5rem;
+        }
+
+        .opp-card.expanded .opp-expand-icon {
+            transform: rotate(180deg);
+        }
+
+        .opp-details {
+            display: none;
+            padding: 0 1.5rem 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .opp-card.expanded .opp-details {
+            display: block;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+            margin-top: 1.25rem;
+        }
+
+        .detail-item {
+            padding: 1rem;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .detail-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .detail-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .detail-value {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h3 {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            font-size: 0.9rem;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            gap: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent-medium);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 0.8rem 1.2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            z-index: 1000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success { border-left: 3px solid var(--success); }
+        .toast.error { border-left: 3px solid var(--danger); }
+
+        /* History View */
+        .history-section {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .history-section h3 {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .history-day {
+            margin-bottom: 1.5rem;
+        }
+
+        .history-date {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+        }
+
+        .history-items {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .history-item:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .history-item .mini-badge {
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            flex-shrink: 0;
+            width: 55px;
+            text-align: center;
+        }
+
+        .mini-badge.best { background: var(--accent-best-bg); color: var(--accent-best); }
+        .mini-badge.medium { background: var(--accent-medium-bg); color: var(--accent-medium); }
+        .mini-badge.small { background: var(--accent-small-bg); color: var(--accent-small); }
+        .mini-badge.ai_synthesized { background: var(--accent-ai-bg); color: var(--accent-ai); }
+
+        .history-item .title {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            flex: 1;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .sidebar-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+
+        .sidebar-card.week {
+            border-top: 3px solid var(--accent-best);
+        }
+
+        .sidebar-card.month {
+            border-top: 3px solid var(--accent-ai);
+        }
+
+        .sidebar-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .sidebar-card.week .sidebar-title { color: var(--accent-best); }
+        .sidebar-card.month .sidebar-title { color: var(--accent-ai); }
+
+        .sidebar-opp-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-opp-desc {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 0.75rem;
+        }
+
+        .sidebar-opp-score {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .sidebar-empty {
+            color: var(--text-muted);
+            font-size: 0.82rem;
+            font-style: italic;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header { padding: 0.75rem 1rem; }
+            .main { padding: 1rem; grid-template-columns: 1fr; }
+            .sidebar { order: -1; }
+            .date-nav { flex-direction: column; gap: 1rem; align-items: flex-start; }
+            .detail-grid { grid-template-columns: 1fr; }
+            .signal-stats { flex-direction: column; }
+            .header-actions { flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="header-inner">
+        <div class="logo">
+            <span class="logo-icon">🔭</span>
+            <div class="logo-text">
+                <h1>Fikir Bulucu</h1>
+                <span>AI Opportunity Radar</span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <div class="scan-status" id="scanStatus">
+                <div class="status-dot never" id="statusDot"></div>
+                <span id="statusText">Kontrol ediliyor...</span>
+            </div>
+            <button class="btn btn-scan" id="scanBtn" onclick="triggerScan()">
+                <span>⚡</span> Tarama Baslat
+            </button>
+        </div>
+    </div>
+</header>
+
+<main class="main">
+    <div class="main-content">
+        <div class="date-nav">
+            <div class="date-display">
+                <h2 id="dateTitle">Bugunun Firsatlari</h2>
+                <span class="date-label" id="dateLabel"></span>
+            </div>
+            <div class="date-arrows">
+                <button id="prevDay" onclick="navigateDay(-1)" title="Onceki gun">&#8592;</button>
+                <button id="todayBtn" onclick="navigateToToday()" title="Bugune don">&#8226;</button>
+                <button id="nextDay" onclick="navigateDay(1)" title="Sonraki gun" disabled>&#8594;</button>
+            </div>
+        </div>
+
+        <div class="signal-stats" id="signalStats"></div>
+
+        <div class="opportunities-grid" id="opportunitiesGrid">
+            <div class="loading">
+                <div class="spinner"></div>
+                <span>Firsatlar yukleniyor...</span>
+            </div>
+        </div>
+
+        <div class="history-section" id="historySection" style="display:none">
+            <h3>Gecmis Firsatlar</h3>
+            <div id="historyContent"></div>
+        </div>
+    </div>
+    <aside class="sidebar">
+        <div class="sidebar-card week">
+            <div class="sidebar-title">Haftanin Fikri</div>
+            <div id="weekBest">
+                <div class="sidebar-empty">Henuz veri yok</div>
+            </div>
+        </div>
+        <div class="sidebar-card month">
+            <div class="sidebar-title">Ayin Fikri</div>
+            <div id="monthBest">
+                <div class="sidebar-empty">Henuz veri yok</div>
+            </div>
+        </div>
+    </aside>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API_BASE = '';
+let currentDate = new Date();
+let todayStr = formatDate(new Date());
+
+function formatDate(d) {
+    return d.toISOString().split('T')[0];
+}
+
+function formatDisplayDate(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    const months = ['Ocak','Subat','Mart','Nisan','Mayis','Haziran',
+                     'Temmuz','Agustos','Eylul','Ekim','Kasim','Aralik'];
+    const days = ['Pazar','Pazartesi','Sali','Carsamba','Persembe','Cuma','Cumartesi'];
+    return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}, ${days[d.getDay()]}`;
+}
+
+function categoryLabel(cat) {
+    const labels = {
+        'BEST': 'Premium - Gunun Fikri',
+        'MEDIUM': 'Orta Seviye',
+        'SMALL': 'Hizli Firsat',
+        'AI_SYNTHESIZED': 'AI Sentezi'
+    };
+    return labels[cat] || cat;
+}
+
+function categoryOrder(cat) {
+    const order = { 'BEST': 0, 'MEDIUM': 1, 'SMALL': 2, 'AI_SYNTHESIZED': 3 };
+    return order[cat] ?? 99;
+}
+
+// === API Calls ===
+
+async function fetchOpportunities(dateStr) {
+    try {
+        const endpoint = dateStr === todayStr
+            ? `${API_BASE}/api/opportunities/today`
+            : `${API_BASE}/api/opportunities/${dateStr}`;
+        const res = await fetch(endpoint);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return await res.json();
+    } catch (e) {
+        console.error('Fetch opportunities error:', e);
+        return { opportunities: [], count: 0 };
+    }
+}
+
+async function fetchSignals() {
+    try {
+        const res = await fetch(`${API_BASE}/api/signals/today`);
+        if (!res.ok) return { by_source: {}, total: 0 };
+        return await res.json();
+    } catch { return { by_source: {}, total: 0 }; }
+}
+
+async function fetchScanStatus() {
+    try {
+        const res = await fetch(`${API_BASE}/api/scan/status`);
+        if (!res.ok) return { status: 'unknown' };
+        return await res.json();
+    } catch { return { status: 'unknown' }; }
+}
+
+async function fetchHistory() {
+    try {
+        const res = await fetch(`${API_BASE}/api/opportunities/history`);
+        if (!res.ok) return { by_date: {} };
+        return await res.json();
+    } catch { return { by_date: {} }; }
+}
+
+async function fetchWeekBest() {
+    try {
+        const res = await fetch(`${API_BASE}/api/opportunities/week-best`);
+        if (!res.ok) return { opportunity: null };
+        return await res.json();
+    } catch { return { opportunity: null }; }
+}
+
+async function fetchMonthBest() {
+    try {
+        const res = await fetch(`${API_BASE}/api/opportunities/month-best`);
+        if (!res.ok) return { opportunity: null };
+        return await res.json();
+    } catch { return { opportunity: null }; }
+}
+
+// === Render ===
+
+function renderOpportunities(data) {
+    const grid = document.getElementById('opportunitiesGrid');
+    const opps = (data.opportunities || []).sort((a, b) => categoryOrder(a.category) - categoryOrder(b.category));
+
+    if (opps.length === 0) {
+        grid.innerHTML = `
+            <div class="empty-state">
+                <div class="icon">🔍</div>
+                <h3>Henuz firsat bulunamadi</h3>
+                <p>Bu tarih icin firsat bulunmuyor. Tarama baslatarak yeni firsatlar kesfedebilirsiniz.</p>
+            </div>`;
+        return;
+    }
+
+    grid.innerHTML = opps.map((opp, i) => {
+        const catClass = opp.category.toLowerCase();
+        const diffDots = Array.from({length: 5}, (_, j) =>
+            `<div class="difficulty-dot ${j < opp.difficulty ? 'filled' : ''}"></div>`
+        ).join('');
+        const diffLabels = ['', 'Cok Kolay', 'Kolay', 'Orta', 'Zor', 'Cok Zor'];
+
+        return `
+        <div class="opp-card ${catClass}" id="card-${i}">
+            <div class="opp-header" onclick="toggleCard(${i})">
+                <div class="opp-header-left">
+                    <div class="opp-badge">${categoryLabel(opp.category)}</div>
+                    <div class="opp-title">${escapeHtml(opp.title)}</div>
+                    <div class="opp-explanation">${escapeHtml(opp.explanation)}</div>
+                </div>
+                <div class="opp-difficulty">
+                    <div class="difficulty-dots">${diffDots}</div>
+                    <div class="difficulty-label">${diffLabels[opp.difficulty] || ''}</div>
+                </div>
+                <div class="opp-expand-icon">&#9660;</div>
+            </div>
+            <div class="opp-details">
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Neden Calisiyor?</div>
+                        <div class="detail-value">${escapeHtml(opp.why_it_works)}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Pazar Firsati</div>
+                        <div class="detail-value">${escapeHtml(opp.market_opportunity)}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Gelir Modeli</div>
+                        <div class="detail-value">${escapeHtml(opp.monetization)}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Basari Faktorleri</div>
+                        <div class="detail-value">${escapeHtml(opp.success_factors)}</div>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function renderSignalStats(data) {
+    const el = document.getElementById('signalStats');
+    const sources = data.by_source || {};
+    const total = data.total || 0;
+
+    if (total === 0) {
+        el.innerHTML = '';
+        return;
+    }
+
+    const sourceIcons = {
+        'hackernews': '🟠', 'producthunt': '🐱', 'reddit': '🔴',
+        'indiehackers': '💡', 'github_trending': '🐙', 'google_trends': '📈'
+    };
+
+    let html = `<div class="signal-stat"><span class="count">${total}</span> toplam sinyal</div>`;
+    for (const [source, count] of Object.entries(sources)) {
+        const icon = sourceIcons[source] || '📊';
+        html += `<div class="signal-stat">${icon} <span class="count">${count}</span> ${source}</div>`;
+    }
+    el.innerHTML = html;
+}
+
+function renderScanStatus(data) {
+    const dot = document.getElementById('statusDot');
+    const text = document.getElementById('statusText');
+
+    dot.className = 'status-dot';
+
+    if (data.status === 'never_run') {
+        dot.classList.add('never');
+        text.textContent = 'Henuz taranmadi';
+    } else if (data.status === 'error') {
+        dot.classList.add('error');
+        text.textContent = 'Son taramada hata';
+    } else {
+        if (data.last_scan) {
+            const scanDate = new Date(data.last_scan);
+            const now = new Date();
+            const diffH = Math.round((now - scanDate) / 3600000);
+            text.textContent = diffH < 1 ? 'Az once tarandi' : `${diffH} saat once`;
+        } else {
+            text.textContent = 'Aktif';
+        }
+    }
+}
+
+async function renderHistory() {
+    const data = await fetchHistory();
+    const section = document.getElementById('historySection');
+    const content = document.getElementById('historyContent');
+    const byDate = data.by_date || {};
+    const dates = Object.keys(byDate).sort().reverse();
+
+    // Exclude today
+    const pastDates = dates.filter(d => d !== todayStr);
+
+    if (pastDates.length === 0) {
+        section.style.display = 'none';
+        return;
+    }
+
+    section.style.display = 'block';
+    content.innerHTML = pastDates.slice(0, 7).map(dateStr => {
+        const opps = byDate[dateStr].sort((a, b) => categoryOrder(a.category) - categoryOrder(b.category));
+        return `
+        <div class="history-day">
+            <div class="history-date">${formatDisplayDate(dateStr)}</div>
+            <div class="history-items">
+                ${opps.map(o => `
+                    <div class="history-item" onclick="navigateToDate('${dateStr}')">
+                        <span class="mini-badge ${o.category.toLowerCase()}">${categoryLabel(o.category).split(' ')[0]}</span>
+                        <span class="title">${escapeHtml(o.title)}</span>
+                    </div>
+                `).join('')}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// === Actions ===
+
+function toggleCard(index) {
+    const card = document.getElementById(`card-${index}`);
+    card.classList.toggle('expanded');
+}
+
+function navigateDay(offset) {
+    currentDate.setDate(currentDate.getDate() + offset);
+    loadDay();
+}
+
+function navigateToToday() {
+    currentDate = new Date();
+    loadDay();
+}
+
+function navigateToDate(dateStr) {
+    currentDate = new Date(dateStr + 'T00:00:00');
+    loadDay();
+}
+
+async function loadDay() {
+    const dateStr = formatDate(currentDate);
+    const isToday = dateStr === todayStr;
+
+    document.getElementById('dateTitle').textContent = isToday ? 'Bugunun Firsatlari' : formatDisplayDate(dateStr);
+    document.getElementById('dateLabel').textContent = isToday ? formatDisplayDate(dateStr) : '';
+    document.getElementById('nextDay').disabled = isToday;
+
+    document.getElementById('opportunitiesGrid').innerHTML = `
+        <div class="loading"><div class="spinner"></div><span>Yukleniyor...</span></div>`;
+
+    const data = await fetchOpportunities(dateStr);
+    renderOpportunities(data);
+}
+
+async function triggerScan() {
+    const btn = document.getElementById('scanBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px"></div> Taraniyor...';
+
+    try {
+        const res = await fetch(`${API_BASE}/api/scan/trigger`, { method: 'POST' });
+        if (res.ok) {
+            showToast('Tarama baslatildi! Sonuclar birkas dakika icinde hazir olacak.', 'success');
+            // Poll for results
+            setTimeout(async () => {
+                await loadDay();
+                const status = await fetchScanStatus();
+                renderScanStatus(status);
+                const signals = await fetchSignals();
+                renderSignalStats(signals);
+            }, 60000);
+        } else {
+            showToast('Tarama baslatilamadi.', 'error');
+        }
+    } catch (e) {
+        showToast('Baglanti hatasi.', 'error');
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<span>⚡</span> Tarama Baslat';
+}
+
+function showToast(msg, type = 'success') {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.className = `toast ${type} show`;
+    setTimeout(() => toast.classList.remove('show'), 4000);
+}
+
+function renderSidebarOpp(elementId, data) {
+    const el = document.getElementById(elementId);
+    const opp = data.opportunity;
+    if (!opp) {
+        el.innerHTML = '<div class="sidebar-empty">Henuz veri yok</div>';
+        return;
+    }
+    el.innerHTML = `
+        <div class="sidebar-opp-title">${escapeHtml(opp.title)}</div>
+        <div class="sidebar-opp-desc">${escapeHtml(opp.explanation)}</div>
+        <div class="sidebar-opp-score">Skor: ${(opp.score * 100).toFixed(0)}% | Zorluk: ${opp.difficulty}/5</div>
+    `;
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+// === Init ===
+
+async function init() {
+    todayStr = formatDate(new Date());
+    currentDate = new Date();
+
+    const [oppData, signals, status, weekBest, monthBest] = await Promise.all([
+        fetchOpportunities(todayStr),
+        fetchSignals(),
+        fetchScanStatus(),
+        fetchWeekBest(),
+        fetchMonthBest()
+    ]);
+
+    document.getElementById('dateLabel').textContent = formatDisplayDate(todayStr);
+    renderOpportunities(oppData);
+    renderSignalStats(signals);
+    renderScanStatus(status);
+    renderSidebarOpp('weekBest', weekBest);
+    renderSidebarOpp('monthBest', monthBest);
+    renderHistory();
+}
+
+init();
+</script>
+</body>
+</html>
