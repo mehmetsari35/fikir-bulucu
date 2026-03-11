@@ -137,15 +137,6 @@
             cursor: not-allowed;
         }
 
-        .btn-scan {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            border-color: #3b82f6;
-        }
-
-        .btn-scan:hover {
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
-        }
-
         /* Main */
         .main {
             max-width: 1400px;
@@ -622,9 +613,6 @@
                 <div class="status-dot never" id="statusDot"></div>
                 <span id="statusText">Kontrol ediliyor...</span>
             </div>
-            <button class="btn btn-scan" id="scanBtn" onclick="triggerScan()">
-                <span>⚡</span> Tarama Baslat
-            </button>
         </div>
     </div>
 </header>
@@ -774,7 +762,7 @@ function renderOpportunities(data) {
             <div class="empty-state">
                 <div class="icon">🔍</div>
                 <h3>Henuz firsat bulunamadi</h3>
-                <p>Bu tarih icin firsat bulunmuyor. Tarama baslatarak yeni firsatlar kesfedebilirsiniz.</p>
+                <p>Bu tarih icin firsat bulunmuyor. Her gun sabah 10:00'da otomatik tarama yapilir.</p>
             </div>`;
         return;
     }
@@ -864,9 +852,9 @@ function renderScanStatus(data) {
             const scanDate = new Date(data.last_scan);
             const now = new Date();
             const diffH = Math.round((now - scanDate) / 3600000);
-            text.textContent = diffH < 1 ? 'Az once tarandi' : `${diffH} saat once`;
+            text.textContent = diffH < 1 ? 'Az once tarandi' : `${diffH} saat once | Otomatik`;
         } else {
-            text.textContent = 'Aktif';
+            text.textContent = 'Otomatik tarama aktif';
         }
     }
 }
@@ -939,34 +927,6 @@ async function loadDay() {
 
     const data = await fetchOpportunities(dateStr);
     renderOpportunities(data);
-}
-
-async function triggerScan() {
-    const btn = document.getElementById('scanBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px"></div> Taraniyor...';
-
-    try {
-        const res = await fetch(`${API_BASE}/api/scan/trigger`, { method: 'POST' });
-        if (res.ok) {
-            showToast('Tarama baslatildi! Sonuclar birkas dakika icinde hazir olacak.', 'success');
-            // Poll for results
-            setTimeout(async () => {
-                await loadDay();
-                const status = await fetchScanStatus();
-                renderScanStatus(status);
-                const signals = await fetchSignals();
-                renderSignalStats(signals);
-            }, 60000);
-        } else {
-            showToast('Tarama baslatilamadi.', 'error');
-        }
-    } catch (e) {
-        showToast('Baglanti hatasi.', 'error');
-    }
-
-    btn.disabled = false;
-    btn.innerHTML = '<span>⚡</span> Tarama Baslat';
 }
 
 function showToast(msg, type = 'success') {
