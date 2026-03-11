@@ -49,8 +49,21 @@ async def get_today_opportunities() -> dict[str, Any]:
             .order_by(Opportunity.score.desc())
             .all()
         )
+
+        # If no opportunities today, return most recent available data
+        actual_date = today
+        if not opportunities:
+            opportunities = (
+                session.query(Opportunity)
+                .order_by(Opportunity.created_date.desc(), Opportunity.score.desc())
+                .limit(20)
+                .all()
+            )
+            if opportunities:
+                actual_date = opportunities[0].created_date
+
         return {
-            "date": today.isoformat(),
+            "date": actual_date.isoformat() if actual_date else today.isoformat(),
             "count": len(opportunities),
             "opportunities": [opp.to_dict() for opp in opportunities],
         }

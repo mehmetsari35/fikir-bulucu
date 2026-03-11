@@ -761,8 +761,8 @@ function renderOpportunities(data) {
         grid.innerHTML = `
             <div class="empty-state">
                 <div class="icon">🔍</div>
-                <h3>Henuz firsat bulunamadi</h3>
-                <p>Bu tarih icin firsat bulunmuyor. Her gun sabah 10:00'da otomatik tarama yapilir.</p>
+                <h3>Tarama devam ediyor...</h3>
+                <p>Veriler yukleniyor, lutfen birkaç dakika bekleyin. Sayfa otomatik guncellenecek.</p>
             </div>`;
         return;
     }
@@ -971,13 +971,39 @@ async function init() {
         fetchMonthBest()
     ]);
 
-    document.getElementById('dateLabel').textContent = formatDisplayDate(todayStr);
+    // If API returned data from a different date, show that date
+    const displayDate = oppData.date || todayStr;
+    if (displayDate !== todayStr && oppData.count > 0) {
+        document.getElementById('dateTitle').textContent = 'Son Bulunan Firsatlar';
+        document.getElementById('dateLabel').textContent = formatDisplayDate(displayDate);
+    } else {
+        document.getElementById('dateLabel').textContent = formatDisplayDate(todayStr);
+    }
     renderOpportunities(oppData);
     renderSignalStats(signals);
     renderScanStatus(status);
     renderSidebarOpp('weekBest', weekBest);
     renderSidebarOpp('monthBest', monthBest);
     renderHistory();
+
+    // If no data yet, retry after 60 seconds (startup scan may be running)
+    if (oppData.count === 0) {
+        setTimeout(async () => {
+            const retryData = await fetchOpportunities(todayStr);
+            if (retryData.count > 0) {
+                const retryDate = retryData.date || todayStr;
+                if (retryDate !== todayStr) {
+                    document.getElementById('dateTitle').textContent = 'Son Bulunan Firsatlar';
+                    document.getElementById('dateLabel').textContent = formatDisplayDate(retryDate);
+                } else {
+                    document.getElementById('dateTitle').textContent = 'Bugunun Firsatlari';
+                    document.getElementById('dateLabel').textContent = formatDisplayDate(todayStr);
+                }
+                renderOpportunities(retryData);
+                showToast('Yeni firsatlar yuklendi!', 'success');
+            }
+        }, 60000);
+    }
 }
 
 init();

@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from src.database.models import init_db
+from src.database.models import Opportunity, get_session, init_db
 
 logging.basicConfig(
     level=logging.INFO,
@@ -62,6 +62,28 @@ def _stop_scheduler() -> None:
         _scheduler = None
 
 
+def _run_initial_scan_if_empty() -> None:
+    """Run a scan on startup if the database has no opportunities."""
+    import threading
+
+    def _scan():
+        try:
+            with get_session() as session:
+                count = session.query(Opportunity).count()
+            if count > 0:
+                logger.info("Database has %d opportunities, skipping startup scan", count)
+                return
+            logger.info("Database is empty, triggering startup scan...")
+            from src.scanner import run_daily_scan
+            result = run_daily_scan()
+            logger.info("Startup scan complete: %s opportunities generated", result.get("opportunities_generated", 0))
+        except Exception as exc:
+            logger.error("Startup scan failed: %s", exc, exc_info=True)
+
+    thread = threading.Thread(target=_scan, daemon=True)
+    thread.start()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -70,6 +92,7 @@ async def lifespan(app: FastAPI):
     logger.info("Database initialized")
 
     _start_scheduler()
+    _run_initial_scan_if_empty()
 
     yield
 
