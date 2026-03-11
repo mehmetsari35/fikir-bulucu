@@ -1,0 +1,37 @@
+name: Daily Opportunity Scan
+
+on:
+  schedule:
+    # Her gün 07:00 UTC = 10:00 Türkiye saati
+    - cron: '0 7 * * *'
+  workflow_dispatch: # Manuel tetikleme
+
+jobs:
+  trigger-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wake up Render instance
+        run: |
+          echo "Waking up Render instance..."
+          curl -s -o /dev/null -w "%{http_code}" https://fikir-bulucu.onrender.com/ || true
+          sleep 60
+
+      - name: Trigger daily scan
+        run: |
+          echo "Triggering scan..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST https://fikir-bulucu.onrender.com/api/scan/trigger)
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+          echo "Status: $HTTP_CODE"
+          echo "Response: $BODY"
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "Scan trigger failed!"
+            exit 1
+          fi
+
+      - name: Verify scan started
+        run: |
+          sleep 10
+          curl -s https://fikir-bulucu.onrender.com/api/scan/status | head -c 500
+          echo ""
+          echo "Scan triggered successfully!"
