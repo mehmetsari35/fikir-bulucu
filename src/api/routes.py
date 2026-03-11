@@ -201,3 +201,46 @@ async def trigger_scan(background_tasks: BackgroundTasks) -> dict[str, Any]:
         "message": "Scan started in background. Check /api/scan/status for progress.",
         "triggered_at": datetime.now(timezone.utc).isoformat(),
     }
+
+
+@router.get("/api/debug/analyzer")
+async def debug_analyzer() -> dict[str, Any]:
+    """Test the analyzer with existing signals to diagnose issues."""
+    from src.config import settings
+
+    result: dict[str, Any] = {
+        "api_key_set": bool(settings.OPENROUTER_API_KEY),
+        "api_key_prefix": settings.OPENROUTER_API_KEY[:8] + "..." if settings.OPENROUTER_API_KEY else "EMPTY",
+    }
+
+    # Check signal count
+    with get_session() as session:
+        signal_count = session.query(RawSignal).count()
+        opp_count = session.query(Opportunity).count()
+        result["total_signals"] = signal_count
+        result["total_opportunities"] = opp_count
+
+    # Try a minimal API call
+    if settings.OPENROUTER_API_KEY:
+        try:
+            import httpx
+            with httpx.Client() as client:
+                response = client.post(
+                    "https://openrouter.ai/api/v1/chat/completions",
+                    json={
+                        "model": "google/gemma-3n-e4b-it:free",
+                        "messages": [{"role": "user", "content": "Say 'OK' in one word."}],
+                        "max_tokens": 10,
+                    },
+                    headers={
+                        "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}",
+                        "Content-Type": "application/json",
+                    },
+                    timeout=30.0,
+                )
+                result["model_test_status"] = response.status_code
+                result["model_test_response"] = response.text[:500]
+        except Exception as exc:
+            result["model_test_error"] = str(exc)
+
+    return result
